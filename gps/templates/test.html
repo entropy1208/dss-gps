@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta charset="utf-8" />
+      <style>
+        #map {
+        height: 400px;
+        width: 100%;
+       }
+       </style>
+      <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+  </head>
+  <body>
+    <script>
+        base_url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?' + 'location=' + 43434.32424 + ',' + 24.4234;
+        console.log(base_url);
+        var params = jQuery.param({type: 'restaurant', radius: 5000, key: 'AIzaSyCrWpmAYeddQdpcWnaBpIMN46ZwRX0kG8A'});
+        console.log(params)
+        url = base_url + params;
+        console.log(url);
+    </script>
+  </body>
+</html>

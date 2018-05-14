@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta charset="utf-8">
+      <style>
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+       </style>
+      <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+  </head>
+  <body>
+    {% extends "layout.html" %}
+    <h3>My Google Maps Demo</h3>
+    {% block content %}
+        {% if user.is_authenticated %}
+            <p class="display-4">Hello, {{ user.username }} <a class="lead" href="{% url 'logout' %}">Logout</a></p>
+            <div id="map"></div>
+            <script>
+                function sleep(ms) {
+                  return new Promise(resolve => setTimeout(resolve, ms));
+                }
+                async function initMap() {
+                    var geocoder;
+                    var map;
+                    var infowindow;
+                    var lat, lng;
+                    var service;
+                    geocoder = new google.maps.Geocoder();
+                    map = new google.maps.Map(document.getElementById('map'));
+                    var suffix = 'Karlskrona' + ',' + ' Sweden';
+                    geocoder.geocode( { 'address': suffix}, function(results, status) {
+                      if (status == 'OK') {
+                          map.setCenter(results[0].geometry.location);
+                          map.setZoom(15);
+                          lat = results[0].geometry.location.lat();
+                          lng = results[0].geometry.location.lng();
+                      } else {
+                            alert('Geocode was not successful for the following reason: ' + status);
+                      }
+                    });
+                    await sleep(5000);
+                    var location = new google.maps.LatLng(lat, lng);
+                    var request = {
+                        location: location,
+                        radius: '5000',
+                        type: ['restaurant']
+                    };
+                    infowindow = new google.maps.InfoWindow();
+                    service = new google.maps.places.PlacesService(map);
+                    service.nearbySearch(request, callback);
+                    function callback(results, status) {
+                      if (status == google.maps.places.PlacesServiceStatus.OK) {
+                        for (var i = 0; i < results.length; i++) {
+                          var place = results[i];
+                          createMarker(results[i]);
+                        }
+                      }
+                    }
+                    function createMarker(place) {
+                        var placeLoc = place.geometry.location;
+                        var marker = new google.maps.Marker({
+                          map: map,
+                          position: place.geometry.location
+                        });
+                        google.maps.event.addListener(marker, 'click', function() {
+                          infowindow.setContent(place.name);
+                          infowindow.open(map, this);
+                        });
+                    }
+                }
+        </script>
+        <script async defer
+                src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCrWpmAYeddQdpcWnaBpIMN46ZwRX0kG8A&libraries=places&callback=initMap">
+        </script>
+        {% else %}
+                 <a class="lead" href="{% url 'login' %}">Log in</a>
+        {% endif %}
+  {% endblock content %}
+  </body>
+</html>
