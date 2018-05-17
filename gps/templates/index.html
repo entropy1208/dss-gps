@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html>
   <head>
+      <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
       <meta charset="utf-8">
+      <title>Fast Travel Application</title>
       <style>
         #map {
-            height: 400px;
-            width: 100%;
+            height: 500px;
+            width: 85%;
         }
        </style>
       <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
@@ -27,8 +29,14 @@
                     var infowindow;
                     var lat, lng;
                     var service;
+                    // Use waypoints to store intermediate locations
+                    var waypoints; = [];
+                    var directionsService = new google.maps.DirectionsService;
+                    var startLoc = new google.maps.LatLng(56.166854, 15.588349);
+                    var destLoc = new google.maps.LatLng(56.1663649,15.5849291);
                     geocoder = new google.maps.Geocoder();
                     map = new google.maps.Map(document.getElementById('map'));
+                    var directionsDisplay = new google.maps.DirectionsRenderer({map: map});
                     var suffix = 'Karlskrona' + ',' + ' Sweden';
                     geocoder.geocode( { 'address': suffix}, function(results, status) {
                       if (status == 'OK') {
@@ -45,8 +53,9 @@
                     var request = {
                         location: location,
                         radius: '5000',
-                        type: ['restaurant']
+                        type: ['museum']
                     };
+                    // Instantiate an info window to hold distance by foot, train, car, etc. and also like time remaining, etc.
                     infowindow = new google.maps.InfoWindow();
                     service = new google.maps.places.PlacesService(map);
                     service.nearbySearch(request, callback);
@@ -58,6 +67,7 @@
                         }
                       }
                     }
+                    placeInitialMarkers(startLoc, destLoc);
                     function createMarker(place) {
                         var placeLoc = place.geometry.location;
                         var marker = new google.maps.Marker({
@@ -65,9 +75,71 @@
                           position: place.geometry.location
                         });
                         google.maps.event.addListener(marker, 'click', function() {
-                          infowindow.setContent(place.name);
-                          infowindow.open(map, this);
+                            infowindow.setContent(place.name);
+                            infowindow.open(map, this);
                         });
+                        google.maps.event.addListener(marker, 'rightclick', function() {
+                            if (waypoints.length == 0)  {
+                                getDirections(startLoc, marker.position);
+                            }
+                            else {
+                                getDirections(waypoints[waypoints.length - 1], marker.position);
+                            }
+                        });
+                    }
+                    // Places the default start and dest markers
+                    function placeInitialMarkers(startLoc, destLoc)  {
+                        var startmarker = new google.maps.Marker({
+                            position: startLoc,
+                            map: map,
+                            label: 'A',
+                            animation: google.maps.Animation.DROP,
+                            draggable:true,
+                            title:"Starting Point"
+                        });
+                        var destmarker = new google.maps.Marker({
+                            position: destLoc,
+                            map: map,
+                            label: 'B',
+                            animation: google.maps.Animation.DROP,
+                            draggable:true,
+                            title:"Destination"
+                        });
+                        startmarker.addListener('click', toggleBounceOne);
+                        destmarker.addListener('click', toggleBounceTwo);
+
+                        function toggleBounceOne() {
+                            if (startmarker.getAnimation() !== null) {
+                                startmarker.setAnimation(null);
+                            } else {
+                                startmarker.setAnimation(google.maps.Animation.BOUNCE);
+                            }
+                        }
+                        function toggleBounceTwo()  {
+                            if (destmarker.getAnimation() !== null) {
+                                destmarker.setAnimation(null);
+                            } else {
+                                destmarker.setAnimation(google.maps.Animation.BOUNCE);
+                            }
+                        }
+                        function getDirections(startLoc, endLoc)    {
+                            directionsService.route({
+                                origin: startLoc,
+                                destination: endLoc,
+                                travelMode: 'WALKING',
+                                unitSystem: google.maps.UnitSystem.METRIC
+                                },
+                                function(response, status) {
+                                      // Route the directions
+                                      if (status === 'OK') {
+                                        directionsDisplay.setDirections(response);
+                                        waypoints.push(endLoc);
+                                      } else {
+                                        window.alert('Directions request failed due to ' + status);
+                                      }
+                                }
+                            });
+                        }
                     }
                 }
         </script>
