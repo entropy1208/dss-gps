@@ -5,10 +5,11 @@
       <meta charset="utf-8">
       <title>Fast Travel Application</title>
       <style>
+
         #right-panel {
             font-family: 'Roboto','sans-serif';
             line-height: 30px;
-            padding-left: 10px;
+            padding-left: 0px;
         }
 
         #right-panel select, #right-panel input {
@@ -24,14 +25,15 @@
         }
 
         #map {
-            height: 450px;
-            width: 70%;
+            height: 485px;
+            width: 63%;
+            display: inline-block;
         }
 
         #right-panel {
-            float: right;
-            width: 25%;
-            height: 450px;
+            width: 35%;
+            height: 485px;
+            display: inline-block;
             overflow: auto;
         }
 
@@ -50,6 +52,7 @@
         :-ms-input-placeholder {
            text-align: center;
         }
+
        </style>
       <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
   </head>
@@ -59,16 +62,13 @@
     {% block content %}
         {% if user.is_authenticated %}
             <div>
-                <p class="display-4">Hello, {{ user.username }} <a class="lead" href="{% url 'logout' %}">Logout</a>
-                    <div>
-                        <b>Enter the total travel time:</b>
-                        <input type="text" id="travel-time" placeholder="<21 hrs"/>
-                    </div>
-                </p>
+                <p class="display-4">Hello, {{ user.username }} <a class="lead" href="{% url 'logout' %}">Logout</a></p>
             </div>
             <div id="map"></div>
             <div id="right-panel">
-              <p>Total Distance: <span id="total"></span></p>
+                <p>Total Walking Distance: <span id="total-walking-distance"></span></p>
+                <p>Total Transit Time: <span id="total-transit-time"></span></p>
+                <p>Approx. Total Trip Time: <span id="total-trip-time"></span></p>
             </div>
             <script>
                 function sleep(ms) {
@@ -80,8 +80,6 @@
                     var infowindow;
                     var lat, lng;
                     var service;
-                    var travelDistance;
-                    var travelTimeRemaining; // Total time for travelling and seeing
                     // Use waypoints to store intermediate locations
                     var waypoints = [];
                     var directionsService = new google.maps.DirectionsService;
@@ -124,15 +122,19 @@
                     function computeTotalDistanceAndTime(result) {
                         var totalDistance = 0;
                         var totalTime = 0;
+                        var remainingTime = 0;
                         var myroute = result.routes[0];
                         for (var i = 0; i < myroute.legs.length; i++) {
                           totalDistance += myroute.legs[i].distance.value;
-                          totalTime += myroute.legs[i].duration.value;    // Add waypoints.length * 2 hrs
+                          totalTime += myroute.legs[i].duration.value;
                         }
+                        remainingTime = totalTime / 3600 + waypoints.length * 2;
                         totalDistance = totalDistance / 1000; // In metres
-                        totalTime = TotalTime / 60; // In minutes
-                        document.getElementById('total').innerHTML = totalDistance + ' km';
-                        return [totalDistance, totalTime];
+                        totalTime = totalTime / 60; // In minutes
+                        document.getElementById('total-walking-distance').innerHTML = totalDistance + ' km';
+                        document.getElementById('total-transit-time').innerHTML = totalTime + ' mins';
+                        document.getElementById('total-trip-time').innerHTML = remainingTime + ' hrs';
+                        return;
                     }
                     function getDirections(startLoc, endLoc)    {
                         directionsService.route({
@@ -144,15 +146,10 @@
                             unitSystem: google.maps.UnitSystem.METRIC
                             },
                             function(response, status) {
-                                  // Route the directions
-                                  if (status === 'OK') {
+                                // Route the directions
+                                if (status === 'OK') {
                                     directionsDisplay.setDirections(response);
-                                    result = computeTotalDistanceAndTime(response);
-                                    travelDistance = result[0];
-                                    travelTimeRemaining = result[1];
-                                    console.log(result);
-                                    console.log(travelDistance);
-                                    console.log(travelTimeRemaining);
+                                    computeTotalDistanceAndTime(response);
                                     if (endLoc == destLoc)   {
                                     }
                                     else {
@@ -161,9 +158,9 @@
                                             stopover: true
                                         });
                                     }
-                                  } else {
+                                } else {
                                     window.alert('Directions request failed due to ' + status);
-                                  }
+                                }
                             }
                         );
                     }
