@@ -128,9 +128,9 @@
                           totalDistance += myroute.legs[i].distance.value;
                           totalTime += myroute.legs[i].duration.value;
                         }
-                        remainingTime = totalTime / 3600 + waypoints.length * 2;
-                        totalDistance = totalDistance / 1000; // In metres
-                        totalTime = totalTime / 60; // In minutes
+                        remainingTime = Math.round((totalTime / 3600 + waypoints.length * 2) * 100) / 100;
+                        totalDistance = Math.round((totalDistance / 1000) * 100) / 100; // In metres
+                        totalTime = Math.round((totalTime / 60) * 100) / 100; // In minutes
                         document.getElementById('total-walking-distance').innerHTML = totalDistance + ' km';
                         document.getElementById('total-transit-time').innerHTML = totalTime + ' mins';
                         document.getElementById('total-trip-time').innerHTML = remainingTime + ' hrs';
